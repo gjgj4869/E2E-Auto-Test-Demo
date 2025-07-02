@@ -57,7 +57,7 @@ def test_oss_create():
         page.keyboard.press('Enter')
         # 사용자명/비밀번호/토큰
         page.fill('input[placeholder="사용자명 입력"]', 'admin')
-        page.fill('input[placeholder="토큰 입력"]', '118a59961502da84c003c9fe29248fb3fe')
+        page.fill('input[placeholder="토큰 입력"]', '')
         
         # 생성 버튼 클릭 (팝업 오른쪽 아래)
         popup = page.locator('[role="dialog"]')  # 팝업을 감싸는 컨테이너
