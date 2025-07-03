@@ -22,7 +22,7 @@ def test_oss_create():
         # + 생성 버튼 클릭
         page.click('button:has-text("생성")')
 
-        time.sleep(2)
+        time.sleep(4)
         
         # 팝업 입력
         page.fill('input[placeholder="이름 입력"]', 'test-git')
@@ -64,6 +64,28 @@ def test_oss_create():
         popup.locator('button:has-text("생성")').click()
 
         time.sleep(3)
+
+        ##argocd 생성
+        # + 생성 버튼 클릭
+        page.click('button:has-text("생성")')
+
+        time.sleep(2)
+
+        page.fill('input[placeholder="이름 입력"]', 'test-argocd')
+        page.fill('textarea[placeholder="설명 입력"]', 'test-argocd')
+        page.fill('input[placeholder="URL 입력"]', 'https://argocd-local.innogrid.com')
+        # 유형 콤보박스 (react-select)
+        page.fill('input[id^="react-select"][type="text"]', 'Argocd')
+        page.keyboard.press('Enter')
+        # 사용자명/비밀번호/토큰
+        page.fill('input[placeholder="사용자명 입력"]', 'admin')
+        page.fill('input[placeholder="비밀번호 입력"]', 'qwe1212!Q')
+        
+        # 생성 버튼 클릭 (팝업 오른쪽 아래)
+        popup = page.locator('[role="dialog"]')  # 팝업을 감싸는 컨테이너
+        popup.locator('button:has-text("생성")').click()
+
+        time.sleep(3)
         
         #oss 삭제
         clear_oss(page)
@@ -88,7 +110,7 @@ def clear_oss(page):
     # # 4. 팝업 내부 오른쪽 아래 "삭제" 버튼 클릭
     dialog.locator('button:has-text("삭제")').click()
 
-    time.sleep(3)
+    time.sleep(4)
     
     # 1. "test-jenkins"이 포함된 행 찾기
     row = page.locator('tr', has_text="test-jenkins")
@@ -104,7 +126,23 @@ def clear_oss(page):
     # # 4. 팝업 내부 오른쪽 아래 "삭제" 버튼 클릭
     dialog.locator('button:has-text("삭제")').click()
 
-    time.sleep(3)
+    time.sleep(4)
+
+    # 1. "test-jenkins"이 포함된 행 찾기
+    row = page.locator('tr', has_text="test-argocd")
+    row.locator('button:has(svg)').nth(1).click()
+
+    # 2. 팝업 등장 대기 (role="dialog" 기준)
+    dialog = page.locator('[role="dialog"]')
+    dialog.wait_for(state="visible", timeout=5000)
+
+    # # 3. 입력창에 "test-git" 입력
+    dialog.locator('input[type="text"]').fill("test-argocd")
+
+    # # 4. 팝업 내부 오른쪽 아래 "삭제" 버튼 클릭
+    dialog.locator('button:has-text("삭제")').click()
+
+    time.sleep(4)
 
 if __name__ == "__main__":
     test_oss_create() 
