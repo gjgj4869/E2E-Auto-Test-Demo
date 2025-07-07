@@ -38,6 +38,7 @@ def create_service(page):
             
             logger.info(f"Successfully created Service 'test-devopsit-service-01'. API call was successful (Status: {response.status}).")
             time.sleep(2)
+            page.reload(wait_until="domcontentloaded")
 
         except Exception as e:
             logger.error(f"An error occurred while creating Service 'test-devopsit-service-01'. Error: {e}")
@@ -100,25 +101,89 @@ def move_project_build(page):
     
     page.locator("div:nth-child(6) > .grid > div:nth-child(2) > .w-full > .form-input").click()
     page.locator("div:nth-child(6) > .grid > div:nth-child(2) > .w-full > .form-input").fill("latest")
-    page.get_by_text("save저장").click()
-    page.get_by_text("build빌드").click()
+    
+    save_button = page.get_by_text("save저장")
+    
+    # '저장' 버튼이 활성화되어 있는지 확인하고, 활성화된 경우에만 클릭합니다.
+    if save_button.is_enabled():
+        logger.info("'저장' 버튼이 활성화되어 있어 클릭합니다.")
+        try:
+            with page.expect_response("**/api/graphql") as response_info:
+                save_button.click()
+            
+            response = response_info.value
+            if not response.ok:
+                response_body = response.text()
+                error_message = f"Failed to save pipeline config via API. Status: {response.status}, Response: {response_body}"
+                logger.error(error_message)
+                raise Exception(error_message)
+            
+            logger.info(f"Successfully saved pipeline config. API call was successful (Status: {response.status}).")
+            time.sleep(1)
+
+        except Exception as e:
+            logger.error(f"An error occurred while clicking the 'save' button. Error: {e}")
+            raise
+    else:
+        logger.info("'저장' 버튼이 비활성화 상태입니다. 변경 사항이 없어 클릭을 건너뜁니다.")
+
+    # '빌드' 버튼 클릭 및 API 응답 검증
+    build_button = page.get_by_text("build빌드")
+    logger.info("빌드 버튼 클릭을 시도합니다.")
+    try:
+        with page.expect_response("**/api/graphql") as response_info:
+            build_button.click()
+        
+        response = response_info.value
+        if not response.ok:
+            response_body = response.text()
+            error_message = f"Failed to start build via API. Status: {response.status}, Response: {response_body}"
+            logger.error(error_message)
+            raise Exception(error_message)
+        
+        logger.info(f"Successfully started build. API call was successful (Status: {response.status}).")
+        time.sleep(2)
+
+    except Exception as e:
+        logger.error(f"An error occurred while clicking the 'build' button. Error: {e}")
+        raise
 
 def delete_service(page):
-    page.locator("a").filter(has_text="서비스").click()
-    time.sleep(2)
+    try:
+        page.locator("a").filter(has_text="서비스").click()
+        time.sleep(2)
+        logger.info("Navigated to Service page for deletion.")
 
-    row = page.locator('tr', has_text="test-devopsit-service-01")
-    # 삭제 버튼 클릭 (두 번째 svg 버튼)
-    row.locator('button:has(svg)').nth(1).click()
+        row = page.locator('tr', has_text="test-devopsit-service-01")
+        # 삭제 버튼 클릭 (두 번째 svg 버튼)
+        row.locator('button:has(svg)').nth(1).click()
 
-    # 팝업 등장 대기 (role="dialog" 기준)
-    dialog = page.locator('[role="dialog"]')
-    dialog.wait_for(state="visible", timeout=5000)
+        # 팝업 등장 대기
+        dialog = page.locator('[role="dialog"]')
+        dialog.wait_for(state="visible", timeout=5000)
 
-    # 입력창에 입력
-    dialog.locator('input[type="text"]').fill("test-devopsit-service-01")
+        # 입력창에 이름 입력
+        dialog.locator('input[type="text"]').fill("test-devopsit-service-01")
 
-    # 팝업 내부 오른쪽 아래 "삭제" 버튼 클릭
-    dialog.locator('button:has-text("삭제")').click()
+        # "삭제" 버튼 클릭 및 API 응답 검증
+        try:
+            with page.expect_response("**/api/graphql") as response_info:
+                dialog.locator('button:has-text("삭제")').click()
+            
+            response = response_info.value
+            if not response.ok:
+                response_body = response.text()
+                error_message = f"Failed to delete Service 'test-devopsit-service-01' via API. Status: {response.status}, Response: {response_body}"
+                logger.error(error_message)
+                raise Exception(error_message)
+            
+            logger.info(f"Successfully deleted Service 'test-devopsit-service-01'. API call was successful (Status: {response.status}).")
+            time.sleep(2)
 
-    time.sleep(4)
+        except Exception as e:
+            logger.error(f"An error occurred while deleting Service 'test-devopsit-service-01'. Error: {e}")
+            raise
+
+    except Exception as e:
+        logger.error(f"Failed to navigate to Service page or complete Service deletion. Error: {e}")
+        raise

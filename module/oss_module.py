@@ -91,6 +91,7 @@ def delete_oss(page, oss_names):
                 row.locator('button:has(svg)').nth(1).click()
                 dialog = page.locator('[role="dialog"]')
                 dialog.wait_for(state="visible", timeout=5000)
+                time.sleep(1)
                 dialog.locator('input[type="text"]').fill(name)
                 time.sleep(1)
                 

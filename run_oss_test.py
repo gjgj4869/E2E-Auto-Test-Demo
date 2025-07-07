@@ -3,7 +3,7 @@ from module.oss_module import login, create_oss, delete_oss
 from module.infra_module import create_infra, delete_infra
 from module.service_module import create_service, delete_service, move_project_build
 import time
-from log_config import setup_logging
+from config.log_config import setup_logging
 
 # 로깅 설정
 setup_logging()

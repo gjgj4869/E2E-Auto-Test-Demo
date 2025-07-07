@@ -52,22 +52,42 @@ def create_infra(page, oss_list):
         raise
 
 def delete_infra(page):
-    page.click('button:has-text("설정")')
-    # 확장 메뉴 '자원' 클릭
-    page.click('a:has-text("자원")')
+    try:
+        page.click('button:has-text("설정")')
+        # 확장 메뉴 '자원' 클릭
+        page.click('a:has-text("자원")')
+        logger.info("Navigated to Infra page for deletion.")
 
-    row = page.locator('tr', has_text="test-localstack")
-    # 삭제 버튼 클릭 (두 번째 svg 버튼)
-    row.locator('button:has(svg)').nth(1).click()
+        row = page.locator('tr', has_text="test-localstack")
+        # 삭제 버튼 클릭 (두 번째 svg 버튼)
+        row.locator('button:has(svg)').nth(1).click()
 
-    # 2. 팝업 등장 대기 (role="dialog" 기준)
-    dialog = page.locator('[role="dialog"]')
-    dialog.wait_for(state="visible", timeout=5000)
+        # 팝업 등장 대기
+        dialog = page.locator('[role="dialog"]')
+        dialog.wait_for(state="visible", timeout=5000)
 
-    # # 3. 입력창에 "test-localstack" 입력
-    dialog.locator('input[type="text"]').fill("test-localstack")
+        # 입력창에 이름 입력
+        dialog.locator('input[type="text"]').fill("test-localstack")
 
-    # # 4. 팝업 내부 오른쪽 아래 "삭제" 버튼 클릭
-    dialog.locator('button:has-text("삭제")').click()
+        # "삭제" 버튼 클릭 및 API 응답 검증
+        try:
+            with page.expect_response("**/api/graphql") as response_info:
+                dialog.locator('button:has-text("삭제")').click()
+            
+            response = response_info.value
+            if not response.ok:
+                response_body = response.text()
+                error_message = f"Failed to delete Infra 'test-localstack' via API. Status: {response.status}, Response: {response_body}"
+                logger.error(error_message)
+                raise Exception(error_message)
+            
+            logger.info(f"Successfully deleted Infra 'test-localstack'. API call was successful (Status: {response.status}).")
+            time.sleep(2)
 
-    time.sleep(4)
+        except Exception as e:
+            logger.error(f"An error occurred while deleting Infra 'test-localstack'. Error: {e}")
+            raise
+
+    except Exception as e:
+        logger.error(f"Failed to navigate to Infra page or complete Infra deletion. Error: {e}")
+        raise
