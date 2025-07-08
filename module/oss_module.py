@@ -5,9 +5,9 @@ import logging
 # 각 모듈에 로거 설정
 logger = logging.getLogger(__name__)
 
-def login(page, username, password):
+def login(page, url, username, password):
     try:
-        page.goto("http://localhost:5000")
+        page.goto(url)
         page.fill('input#username', username)
         page.fill('input#password', password)
         page.click('#kc-login')
